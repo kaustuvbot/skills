@@ -3,7 +3,27 @@
   "projects": {
     "hostby": {
       "description": "Hostby project skills",
-      "groups": ["pr-ops", "pm-ops"]
+      "groups": ["pr-ops", "pm-ops"],
+      "plugins": ["caveman", "ctx7", "spec-kit"]
+    }
+  },
+  "plugins": {
+    "caveman": {
+      "name": "caveman-shrink",
+      "description": "MCP middleware that compresses tool descriptions using caveman rules — reduces token usage",
+      "install": "npm install -g caveman-shrink",
+      "installHint": "curl -fsSL https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh | bash"
+    },
+    "ctx7": {
+      "name": "ctx7",
+      "description": "CLI to manage AI coding skills and documentation context via llm.txt files",
+      "install": "go install github.com/hsbacot/ctx7@latest"
+    },
+    "spec-kit": {
+      "name": "spec-kit",
+      "description": "Spec-Driven Development toolkit — /speckit.* slash commands for requirements, planning, and implementation",
+      "install": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git",
+      "installHint": "specify init --integration copilot --integration-options=\"--skills\""
     }
   },
   "groups": {

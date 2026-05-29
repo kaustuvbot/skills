@@ -21,6 +21,7 @@ Usage:
 Commands:
   list                         Show all projects, groups, and skills
   install <skill|--group|--project>  Install skills
+  setup [project]                 Show project setup + plugin install commands
   update                       Check for a newer version
 
 Install examples:
@@ -43,6 +44,7 @@ npx @kaustuv/skills list                       # Show all projects, groups, and 
 npx @kaustuv/skills install --project hostby   # Install all skills for a project
 npx @kaustuv/skills install --group pr-ops      # Install all skills in a group
 npx @kaustuv/skills install premrg-validate     # Install one skill
+npx @kaustuv/skills setup hostby                 # Show project setup + 3rd-party plugin install commands
 npx @kaustuv/skills update                      # Check for a newer version
 ```
 
@@ -105,9 +107,29 @@ npx @kaustuv/skills update
 
 ## Projects
 
-| Project | Groups | Description |
-|---------|--------|-------------|
-| `hostby` | pr-ops, pm-ops | Hostby project skills |
+| Project | Groups | Plugins | Description |
+|---------|--------|---------|-------------|
+| `hostby` | pr-ops, pm-ops | caveman, ctx7, spec-kit | Hostby project skills |
+
+### Project setup
+
+```bash
+npx @kaustuv/skills setup hostby
+```
+
+This shows all skills for the project with install commands, and prompts to install the 3rd-party plugins.
+
+## 3rd-Party Plugins
+
+These are auto-shown when running `install --project hostby` or `setup hostby`:
+
+| Plugin | Package | Install |
+|--------|---------|---------|
+| `caveman` | caveman-shrink | `npm install -g caveman-shrink` |
+| `ctx7` | ctx7 | `go install github.com/hsbacot/ctx7@latest` |
+| `spec-kit` | specify-cli | `uv tool install specify-cli --from git+https://github.com/github/spec-kit.git` |
+
+After installing spec-kit, run: `specify init --integration copilot --integration-options="--skills"`
 
 ## How users discover skills
 

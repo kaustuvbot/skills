@@ -6,6 +6,7 @@ import { loadRegistry, resolveSkills, getRepoRoot } from '../lib/registry.js';
 import { installClaude } from '../lib/install-claude.js';
 import { installCodex } from '../lib/install-codex.js';
 import { checkForUpdate, printUpdateNotice } from '../lib/updater.js';
+import prompts from 'prompts';
 
 function isToolInstalled(tool) {
   try {
@@ -20,7 +21,7 @@ async function runInstall(skillName, opts) {
   const registry = loadRegistry();
   const repoRoot = getRepoRoot();
   const skills = resolveSkills(registry, { skill: skillName, group: opts.group, project: opts.project });
-  const level = opts.level || 'user';
+  const level = opts.level || 'repo';
   const tool = opts.tool || 'all';
 
   const useClaude = (tool === 'all' || tool === 'claude') && isToolInstalled('claude');
@@ -56,6 +57,70 @@ async function runInstall(skillName, opts) {
   if (update) printUpdateNotice(update, chalk);
 }
 
+function printPlugins(registry, projectName) {
+  const project = registry.projects?.[projectName];
+  if (!project?.plugins?.length) return;
+
+  console.log(chalk.bold('\n3rd-party plugins for this project:\n'));
+  for (const pluginKey of project.plugins) {
+    const plugin = registry.plugins?.[pluginKey];
+    if (!plugin) continue;
+    console.log(chalk.magenta(`  ${pluginKey}`) + chalk.dim(` (${plugin.name})`));
+    console.log(chalk.dim(`  ${plugin.description}`));
+    console.log(chalk.cyan(`  Install: ${plugin.install}`));
+    if (plugin.installHint) {
+      console.log(chalk.dim(`  Hint:   ${plugin.installHint}`));
+    }
+    console.log();
+  }
+}
+
+async function runSetup(projectName, opts) {
+  const registry = loadRegistry();
+  const project = registry.projects?.[projectName];
+  if (!project) {
+    console.error(chalk.red(`Project "${projectName}" not found. Available: ${Object.keys(registry.projects || {}).join(', ')}`));
+    process.exit(1);
+  }
+
+  console.log(chalk.bold(`\nSetting up project: ${projectName}\n`));
+  console.log(chalk.dim(`${project.description}\n`));
+
+  // Install skills
+  const skills = resolveSkills(registry, { project: projectName });
+  if (skills.length > 0) {
+    console.log(chalk.bold('Skills:'));
+    for (const s of skills) {
+      console.log(`  ${chalk.cyan(s.name)}`);
+    }
+    console.log(chalk.dim('Run: ') + chalk.cyan(`npx @kaustuv/skills install --project ${projectName}`) + chalk.dim(' to install them\n'));
+  }
+
+  // Show plugins
+  if (project.plugins?.length) {
+    printPlugins(registry, projectName);
+
+    const response = await prompts({
+      type: 'confirm',
+      name: 'install',
+      message: `Would you like to install the 3rd-party plugins now?`,
+      initial: false,
+    });
+
+    if (response.install) {
+      console.log(chalk.bold('\nPlugin installation commands:\n'));
+      for (const pluginKey of project.plugins) {
+        const plugin = registry.plugins?.[pluginKey];
+        if (!plugin) continue;
+        console.log(chalk.cyan(`  # ${pluginKey}`));
+        console.log(`  ${plugin.install}`);
+        if (plugin.installHint) console.log(chalk.dim(`  # Post-install: ${plugin.installHint}`));
+        console.log();
+      }
+    }
+  }
+}
+
 program
   .name('skills')
   .description('Install personal Claude/Codex skills')
@@ -75,6 +140,36 @@ program
     }
     try {
       await runInstall(skillName, opts);
+
+      // After project install, show plugins
+      if (opts.project) {
+        const registry = loadRegistry();
+        printPlugins(registry, opts.project);
+      }
+    } catch (err) {
+      console.error(chalk.red(err.message));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('setup [project-name]')
+  .description('Show project setup info including 3rd-party plugins and skill install commands')
+  .action(async (projectName, opts) => {
+    if (!projectName) {
+      const registry = loadRegistry();
+      const names = Object.keys(registry.projects || {});
+      if (names.length === 0) {
+        console.log(chalk.yellow('No projects defined.'));
+        return;
+      }
+      for (const name of names) {
+        await runSetup(name, opts);
+      }
+      return;
+    }
+    try {
+      await runSetup(projectName, opts);
     } catch (err) {
       console.error(chalk.red(err.message));
       process.exit(1);
@@ -92,6 +187,9 @@ program
       for (const [name, project] of Object.entries(registry.projects)) {
         console.log(chalk.magenta(`[${name}]`) + chalk.dim(` — ${project.description}`));
         console.log(chalk.dim(`  groups: ${project.groups.join(', ')}`));
+        if (project.plugins?.length) {
+          console.log(chalk.dim(`  plugins: ${project.plugins.join(', ')}`));
+        }
       }
     }
 
@@ -106,6 +204,16 @@ program
         console.log(`  ${chalk.cyan(skillName)} — ${s.description}`);
       }
       console.log();
+    }
+
+    if (registry.plugins && Object.keys(registry.plugins).length > 0) {
+      console.log(chalk.bold('Available plugins:\n'));
+      for (const [key, plugin] of Object.entries(registry.plugins)) {
+        console.log(chalk.magenta(`  ${key}`) + chalk.dim(` (${plugin.name})`));
+        console.log(chalk.dim(`  ${plugin.description}`));
+        console.log(chalk.cyan(`  ${plugin.install}`));
+        console.log();
+      }
     }
   });
 
@@ -133,12 +241,14 @@ ${chalk.bold('Usage:')}
 ${chalk.bold('Commands:')}
   ${chalk.cyan('list')}                         Show all projects, groups, and skills
   ${chalk.cyan('install')} <skill|--group|--project>  Install skills
+  ${chalk.cyan('setup')} [project]              Show project setup info and plugin install commands
   ${chalk.cyan('update')}                       Check for a newer version
 
 ${chalk.bold('Install examples:')}
   npx @kaustuv/skills install --project hostby          ${chalk.dim('# all skills for a project (repo level)')}
   npx @kaustuv/skills install --group pr-ops            ${chalk.dim('# all skills in a group (repo level)')}
   npx @kaustuv/skills install premrg-validate           ${chalk.dim('# single skill (repo level)')}
+  npx @kaustuv/skills setup hostby                        ${chalk.dim('# show setup info + plugin install commands')}
 
 ${chalk.bold('Flags:')}
   ${chalk.cyan('--level repo')}   Install into .claude/skills/ in current directory ${chalk.green('(default)')}
