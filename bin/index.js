@@ -62,16 +62,16 @@ async function runInstall(skillName, opts) {
   if (update) printUpdateNotice(update, chalk);
 }
 
-async function execInstall(cmd, label) {
+async function execInstall(registry, cmd, label) {
+  const pluginKey = Object.entries(registry.plugins || {}).find(([, p]) => p.install === cmd)?.[0] || label;
+  const scriptPath = path.join(__dirname, 'setup-plugin.js');
   return new Promise((resolve) => {
     try {
       console.log(chalk.cyan(`\n# Installing ${label}...`));
-      console.log(chalk.dim(`  ${cmd}`));
-      execSync(cmd, { stdio: 'inherit' });
-      console.log(chalk.green(`✓ ${label} installed`));
+      execSync(`node "${scriptPath}" "${pluginKey}" "${cmd}"`, { stdio: 'inherit' });
       resolve(true);
-    } catch (err) {
-      console.log(chalk.yellow(`⚠ ${label} install failed (is the tool available?)`));
+    } catch {
+      console.log(chalk.yellow(`⚠ ${label} install failed`));
       resolve(false);
     }
   });
@@ -157,13 +157,13 @@ async function runSetup(projectName, opts) {
 
         if (pluginKey === 'caveman') {
           // Special handling for caveman - install + configure project hook
-          const ok = await execInstall(plugin.install, plugin.name);
+          const ok = await execInstall(registry, plugin.install, plugin.name);
           if (ok) {
             await configureCavemanForProject(repoRoot);
             console.log(chalk.green('\n✓ Caveman is active. New Claude Code sessions will auto-enable it.'));
           }
         } else {
-          await execInstall(plugin.install, plugin.name);
+          await execInstall(registry, plugin.install, plugin.name);
         }
       }
     }
