@@ -1,6 +1,6 @@
 {
   "name": "@kaustuv/skills",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Personal Claude Code and Codex skills installer",
   "bin": {
     "skills": "bin/index.js"
