@@ -1,0 +1,7 @@
+{
+  "hooks": {
+    "session:start": [
+      "npx caveman-shrink"
+    ]
+  }
+}

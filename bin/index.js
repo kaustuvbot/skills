@@ -7,6 +7,11 @@ import { installClaude } from '../lib/install-claude.js';
 import { installCodex } from '../lib/install-codex.js';
 import { checkForUpdate, printUpdateNotice } from '../lib/updater.js';
 import prompts from 'prompts';
+import fs from 'fs-extra';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function isToolInstalled(tool) {
   try {
@@ -57,6 +62,43 @@ async function runInstall(skillName, opts) {
   if (update) printUpdateNotice(update, chalk);
 }
 
+async function execInstall(cmd, label) {
+  return new Promise((resolve) => {
+    try {
+      console.log(chalk.cyan(`\n# Installing ${label}...`));
+      console.log(chalk.dim(`  ${cmd}`));
+      execSync(cmd, { stdio: 'inherit' });
+      console.log(chalk.green(`✓ ${label} installed`));
+      resolve(true);
+    } catch (err) {
+      console.log(chalk.yellow(`⚠ ${label} install failed (is the tool available?)`));
+      resolve(false);
+    }
+  });
+}
+
+async function configureCavemanForProject(repoRoot) {
+  // Add caveman auto-init hook to .claude/settings.json
+  const settingsPath = path.join(repoRoot, '.claude', 'settings.json');
+  let settings = {};
+  if (await fs.pathExists(settingsPath)) {
+    const content = await fs.readFile(settingsPath, 'utf8');
+    try { settings = JSON.parse(content); } catch {}
+  }
+
+  // Ensure hooks.caveman exists to trigger auto-init
+  settings.hooks = settings.hooks || {};
+  settings.hooks['session:start'] = settings.hooks['session:start'] || [];
+  const hookCmd = 'npx caveman-shrink';
+  if (!settings.hooks['session:start'].includes(hookCmd)) {
+    settings.hooks['session:start'].push(hookCmd);
+  }
+
+  await fs.ensureDir(path.join(repoRoot, '.claude'));
+  await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2));
+  console.log(chalk.green('✓ Added caveman session hook to .claude/settings.json'));
+}
+
 function printPlugins(registry, projectName) {
   const project = registry.projects?.[projectName];
   if (!project?.plugins?.length) return;
@@ -77,6 +119,7 @@ function printPlugins(registry, projectName) {
 
 async function runSetup(projectName, opts) {
   const registry = loadRegistry();
+  const repoRoot = getRepoRoot();
   const project = registry.projects?.[projectName];
   if (!project) {
     console.error(chalk.red(`Project "${projectName}" not found. Available: ${Object.keys(registry.projects || {}).join(', ')}`));
@@ -86,7 +129,7 @@ async function runSetup(projectName, opts) {
   console.log(chalk.bold(`\nSetting up project: ${projectName}\n`));
   console.log(chalk.dim(`${project.description}\n`));
 
-  // Install skills
+  // Show skills
   const skills = resolveSkills(registry, { project: projectName });
   if (skills.length > 0) {
     console.log(chalk.bold('Skills:'));
@@ -103,19 +146,25 @@ async function runSetup(projectName, opts) {
     const response = await prompts({
       type: 'confirm',
       name: 'install',
-      message: `Would you like to install the 3rd-party plugins now?`,
-      initial: false,
+      message: 'Would you like to install the 3rd-party plugins now?',
+      initial: true,
     });
 
     if (response.install) {
-      console.log(chalk.bold('\nPlugin installation commands:\n'));
       for (const pluginKey of project.plugins) {
         const plugin = registry.plugins?.[pluginKey];
         if (!plugin) continue;
-        console.log(chalk.cyan(`  # ${pluginKey}`));
-        console.log(`  ${plugin.install}`);
-        if (plugin.installHint) console.log(chalk.dim(`  # Post-install: ${plugin.installHint}`));
-        console.log();
+
+        if (pluginKey === 'caveman') {
+          // Special handling for caveman - install + configure project hook
+          const ok = await execInstall(plugin.install, plugin.name);
+          if (ok) {
+            await configureCavemanForProject(repoRoot);
+            console.log(chalk.green('\n✓ Caveman is active. New Claude Code sessions will auto-enable it.'));
+          }
+        } else {
+          await execInstall(plugin.install, plugin.name);
+        }
       }
     }
   }
@@ -140,11 +189,13 @@ program
     }
     try {
       await runInstall(skillName, opts);
-
-      // After project install, show plugins
       if (opts.project) {
         const registry = loadRegistry();
-        printPlugins(registry, opts.project);
+        const project = registry.projects?.[opts.project];
+        if (project?.plugins?.length) {
+          printPlugins(registry, opts.project);
+          console.log(chalk.dim('Run: ') + chalk.cyan(`npx @kaustuv/skills setup ${opts.project}`) + chalk.dim(' to install them\n'));
+        }
       }
     } catch (err) {
       console.error(chalk.red(err.message));
@@ -154,7 +205,7 @@ program
 
 program
   .command('setup [project-name]')
-  .description('Show project setup info including 3rd-party plugins and skill install commands')
+  .description('Set up a project: install skills, 3rd-party plugins, and configure hooks')
   .action(async (projectName, opts) => {
     if (!projectName) {
       const registry = loadRegistry();
@@ -241,14 +292,14 @@ ${chalk.bold('Usage:')}
 ${chalk.bold('Commands:')}
   ${chalk.cyan('list')}                         Show all projects, groups, and skills
   ${chalk.cyan('install')} <skill|--group|--project>  Install skills
-  ${chalk.cyan('setup')} [project]              Show project setup info and plugin install commands
+  ${chalk.cyan('setup')} [project]              Set up project: install skills + 3rd-party plugins
   ${chalk.cyan('update')}                       Check for a newer version
 
 ${chalk.bold('Install examples:')}
   npx @kaustuv/skills install --project hostby          ${chalk.dim('# all skills for a project (repo level)')}
   npx @kaustuv/skills install --group pr-ops            ${chalk.dim('# all skills in a group (repo level)')}
   npx @kaustuv/skills install premrg-validate           ${chalk.dim('# single skill (repo level)')}
-  npx @kaustuv/skills setup hostby                        ${chalk.dim('# show setup info + plugin install commands')}
+  npx @kaustuv/skills setup hostby                        ${chalk.dim('# install skills + 3rd-party plugins, configure hooks')}
 
 ${chalk.bold('Flags:')}
   ${chalk.cyan('--level repo')}   Install into .claude/skills/ in current directory ${chalk.green('(default)')}
