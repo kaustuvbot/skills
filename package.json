@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Personal Claude Code and Codex skills installer",
   "bin": {
-    "skills": "./bin/index.js"
+    "skills": "bin/index.js"
   },
   "main": "./lib/registry.js",
   "scripts": {
@@ -19,7 +19,12 @@
     "node": ">=18"
   },
   "type": "module",
-  "keywords": ["claude", "codex", "skills", "ai"],
+  "keywords": [
+    "claude",
+    "codex",
+    "skills",
+    "ai"
+  ],
   "author": "kaustuv",
   "license": "MIT",
   "publishConfig": {
