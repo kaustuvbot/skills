@@ -19,7 +19,7 @@ function isToolInstalled(tool) {
 async function runInstall(skillName, opts) {
   const registry = loadRegistry();
   const repoRoot = getRepoRoot();
-  const skills = resolveSkills(registry, { skill: skillName, group: opts.group });
+  const skills = resolveSkills(registry, { skill: skillName, group: opts.group, project: opts.project });
   const level = opts.level || 'user';
   const tool = opts.tool || 'all';
 
@@ -52,7 +52,6 @@ async function runInstall(skillName, opts) {
     console.log(chalk.yellow('codex not found in PATH, skipping.'));
   }
 
-  // Check for updates (non-blocking)
   const update = await checkForUpdate(chalk);
   if (update) printUpdateNotice(update, chalk);
 }
@@ -64,13 +63,14 @@ program
 
 program
   .command('install [skill-name]')
-  .description('Install a skill or group of skills')
+  .description('Install a skill, group, or all skills for a project')
   .option('-g, --group <name>', 'Install all skills in a group')
+  .option('-p, --project <name>', 'Install all skills required by a project')
   .option('-l, --level <level>', 'Installation level: user or repo', 'user')
   .option('-t, --tool <tool>', 'Target tool: claude, codex, or all', 'all')
   .action(async (skillName, opts) => {
-    if (!skillName && !opts.group) {
-      console.error(chalk.red('Specify a skill name or --group <name>'));
+    if (!skillName && !opts.group && !opts.project) {
+      console.error(chalk.red('Specify a skill name, --group <name>, or --project <name>'));
       process.exit(1);
     }
     try {
@@ -83,10 +83,19 @@ program
 
 program
   .command('list')
-  .description('List all available groups and skills')
+  .description('List all available projects, groups, and skills')
   .action(() => {
     const registry = loadRegistry();
-    console.log(chalk.bold('\nAvailable skills:\n'));
+
+    if (registry.projects && Object.keys(registry.projects).length > 0) {
+      console.log(chalk.bold('\nProjects:\n'));
+      for (const [name, project] of Object.entries(registry.projects)) {
+        console.log(chalk.magenta(`[${name}]`) + chalk.dim(` — ${project.description}`));
+        console.log(chalk.dim(`  groups: ${project.groups.join(', ')}`));
+      }
+    }
+
+    console.log(chalk.bold('\nGroups & skills:\n'));
     for (const [groupName, group] of Object.entries(registry.groups)) {
       console.log(chalk.yellow(`[${groupName}]`) + chalk.dim(` — ${group.description}`));
       if (group.skills.length === 0) {
@@ -102,12 +111,12 @@ program
 
 program
   .command('update')
-  .description('Update to the latest version')
+  .description('Check for the latest version')
   .action(async () => {
     const update = await checkForUpdate(chalk);
     if (update) {
       console.log(chalk.yellow(`Updating ${update.name} from ${update.current} to ${update.latest}...`));
-      console.log(chalk.dim(`Run: npx ${update.name}@latest install --group <group>`));
+      console.log(chalk.dim(`Run: npx ${update.name}@latest install --project <name>`));
     } else {
       console.log(chalk.green('Already up to date.'));
     }
