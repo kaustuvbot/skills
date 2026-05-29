@@ -10,6 +10,32 @@ No global install needed — use `npx`:
 npx @kaustuv/skills <command>
 ```
 
+Running without arguments shows a quick reference:
+
+```
+@kaustuv/skills — personal Claude/Codex skill installer
+
+Usage:
+  npx @kaustuv/skills <command> [options]
+
+Commands:
+  list                         Show all projects, groups, and skills
+  install <skill|--group|--project>  Install skills
+  update                       Check for a newer version
+
+Install examples:
+  npx @kaustuv/skills install --project hostby          # all skills for a project (repo level)
+  npx @kaustuv/skills install --group pr-ops            # all skills in a group (repo level)
+  npx @kaustuv/skills install premrg-validate           # single skill (repo level)
+
+Flags:
+  --level repo   Install into .claude/skills/ in current directory (default)
+  --level user   Install globally into ~/.claude/skills/
+  --tool claude  Claude Code only
+  --tool codex   Codex CLI only
+  --tool all     Both tools (default, skips missing ones)
+```
+
 ## Commands
 
 ```bash
