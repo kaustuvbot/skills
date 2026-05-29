@@ -28,6 +28,7 @@ async function runInstall(skillName, opts) {
   const skills = resolveSkills(registry, { skill: skillName, group: opts.group, project: opts.project });
   const level = opts.level || 'repo';
   const tool = opts.tool || 'all';
+  const projectName = opts.project;
 
   const useClaude = (tool === 'all' || tool === 'claude') && isToolInstalled('claude');
   const useCodex = (tool === 'all' || tool === 'codex') && isToolInstalled('codex');
@@ -38,24 +39,59 @@ async function runInstall(skillName, opts) {
     } else {
       console.log(chalk.yellow(`${tool} not found in PATH. Skipping.`));
     }
-    return;
+    if (!projectName) return;
   }
 
-  const names = skills.map(s => chalk.cyan(s.name)).join(', ');
-  console.log(`Installing ${names} at ${chalk.bold(level)} level...`);
+  // Install skills
+  if (skills.length > 0) {
+    const names = skills.map(s => chalk.cyan(s.name)).join(', ');
+    console.log(`Installing ${names} at ${chalk.bold(level)} level...`);
 
-  if (useClaude) {
-    const dest = await installClaude(skills, { level, repoRoot });
-    console.log(chalk.green(`✓ Claude: ${dest}`));
-  } else if (tool === 'claude') {
-    console.log(chalk.yellow('claude not found in PATH, skipping.'));
+    if (useClaude) {
+      const dest = await installClaude(skills, { level, repoRoot });
+      console.log(chalk.green(`✓ Claude: ${dest}`));
+    } else if (tool === 'claude') {
+      console.log(chalk.yellow('claude not found in PATH, skipping.'));
+    }
+
+    if (useCodex) {
+      const dest = await installCodex(skills, { level, repoRoot });
+      console.log(chalk.green(`✓ Codex: ${dest}`));
+    } else if (tool === 'codex') {
+      console.log(chalk.yellow('codex not found in PATH, skipping.'));
+    }
   }
 
-  if (useCodex) {
-    const dest = await installCodex(skills, { level, repoRoot });
-    console.log(chalk.green(`✓ Codex: ${dest}`));
-  } else if (tool === 'codex') {
-    console.log(chalk.yellow('codex not found in PATH, skipping.'));
+  // Install 3rd-party plugins for project
+  if (projectName) {
+    const project = registry.projects?.[projectName];
+    if (project?.plugins?.length) {
+      printPlugins(registry, projectName);
+
+      const response = await prompts({
+        type: 'confirm',
+        name: 'install',
+        message: 'Would you like to install the 3rd-party plugins now?',
+        initial: true,
+      });
+
+      if (response.install) {
+        for (const pluginKey of project.plugins) {
+          const plugin = registry.plugins?.[pluginKey];
+          if (!plugin) continue;
+
+          if (pluginKey === 'caveman') {
+            const ok = await execInstall(registry, plugin.install, plugin.name);
+            if (ok) {
+              await configureCavemanForProject(repoRoot);
+              console.log(chalk.green('\n✓ Caveman is active. New Claude Code sessions will auto-enable it.'));
+            }
+          } else {
+            await execInstall(registry, plugin.install, plugin.name);
+          }
+        }
+      }
+    }
   }
 
   const update = await checkForUpdate(chalk);
@@ -189,14 +225,6 @@ program
     }
     try {
       await runInstall(skillName, opts);
-      if (opts.project) {
-        const registry = loadRegistry();
-        const project = registry.projects?.[opts.project];
-        if (project?.plugins?.length) {
-          printPlugins(registry, opts.project);
-          console.log(chalk.dim('Run: ') + chalk.cyan(`npx @kaustuv/skills setup ${opts.project}`) + chalk.dim(' to install them\n'));
-        }
-      }
     } catch (err) {
       console.error(chalk.red(err.message));
       process.exit(1);
