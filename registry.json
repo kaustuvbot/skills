@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "groups": {
+    "personal": {
+      "description": "Personal productivity and workflow skills",
+      "skills": ["premrg-validate"]
+    },
+    "dev": {
+      "description": "General development workflow skills",
+      "skills": []
+    }
+  },
+  "skills": {
+    "premrg-validate": {
+      "group": "personal",
+      "path": "skills/personal/premrg-validate",
+      "description": "Pre-merge PR validation and review. Validate implementation against acceptance criteria before merge."
+    }
+  }
+}

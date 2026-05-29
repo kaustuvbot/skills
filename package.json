@@ -1,0 +1,28 @@
+{
+  "name": "@kaustuv/skills",
+  "version": "1.0.0",
+  "description": "Personal Claude Code and Codex skills installer",
+  "bin": {
+    "skills": "./bin/index.js"
+  },
+  "main": "./lib/registry.js",
+  "scripts": {
+    "test": "node bin/index.js list"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "fs-extra": "^11.2.0",
+    "prompts": "^2.4.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
+  "keywords": ["claude", "codex", "skills", "ai"],
+  "author": "kaustuv",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}
