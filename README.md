@@ -61,6 +61,14 @@ npx @kaustuv/skills update
 |-------|-------------|
 | `premrg-validate` | Pre-merge PR validation and review. Validate implementation against acceptance criteria before merge. |
 
+### pr-ops
+
+| Skill | Description |
+|-------|-------------|
+| `premrg-validate` | Pre-merge PR validation and review. Validate implementation against acceptance criteria before merge. |
+| `combine-prs` | Combine multiple PRs into one main PR with combined description |
+| `db-seed` | Analyze task plans and append database seed entries required for manual test cases |
+
 ## Adding Skills
 
 1. Add a directory under `skills/<group>/<skill-name>/` with a `SKILL.md`

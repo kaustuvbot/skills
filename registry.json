@@ -5,6 +5,10 @@
       "description": "Personal productivity and workflow skills",
       "skills": ["premrg-validate"]
     },
+    "pr-ops": {
+      "description": "PR workflow and operations skills",
+      "skills": ["premrg-validate", "combine-prs", "db-seed"]
+    },
     "dev": {
       "description": "General development workflow skills",
       "skills": []
@@ -12,9 +16,19 @@
   },
   "skills": {
     "premrg-validate": {
-      "group": "personal",
-      "path": "skills/personal/premrg-validate",
+      "group": "pr-ops",
+      "path": "skills/pr-ops/premrg-validate",
       "description": "Pre-merge PR validation and review. Validate implementation against acceptance criteria before merge."
+    },
+    "combine-prs": {
+      "group": "pr-ops",
+      "path": "skills/pr-ops/combine-prs",
+      "description": "Combine multiple PRs into one main PR with combined description"
+    },
+    "db-seed": {
+      "group": "pr-ops",
+      "path": "skills/pr-ops/db-seed",
+      "description": "Analyze task plans and append database seed entries required for manual test cases"
     }
   }
 }
