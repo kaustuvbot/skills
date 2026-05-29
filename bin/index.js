@@ -66,7 +66,7 @@ program
   .description('Install a skill, group, or all skills for a project')
   .option('-g, --group <name>', 'Install all skills in a group')
   .option('-p, --project <name>', 'Install all skills required by a project')
-  .option('-l, --level <level>', 'Installation level: user or repo', 'user')
+  .option('-l, --level <level>', 'Installation level: repo (default) or user (~/.claude/skills/)', 'repo')
   .option('-t, --tool <tool>', 'Target tool: claude, codex, or all', 'all')
   .action(async (skillName, opts) => {
     if (!skillName && !opts.group && !opts.project) {
@@ -121,5 +121,35 @@ program
       console.log(chalk.green('Already up to date.'));
     }
   });
+
+// Show help when no command given
+if (process.argv.length <= 2) {
+  console.log(`
+${chalk.bold('@kaustuv/skills')} — personal Claude/Codex skill installer
+
+${chalk.bold('Usage:')}
+  npx @kaustuv/skills <command> [options]
+
+${chalk.bold('Commands:')}
+  ${chalk.cyan('list')}                         Show all projects, groups, and skills
+  ${chalk.cyan('install')} <skill|--group|--project>  Install skills
+  ${chalk.cyan('update')}                       Check for a newer version
+
+${chalk.bold('Install examples:')}
+  npx @kaustuv/skills install --project hostby          ${chalk.dim('# all skills for a project (repo level)')}
+  npx @kaustuv/skills install --group pr-ops            ${chalk.dim('# all skills in a group (repo level)')}
+  npx @kaustuv/skills install premrg-validate           ${chalk.dim('# single skill (repo level)')}
+
+${chalk.bold('Flags:')}
+  ${chalk.cyan('--level repo')}   Install into .claude/skills/ in current directory ${chalk.green('(default)')}
+  ${chalk.cyan('--level user')}   Install globally into ~/.claude/skills/
+  ${chalk.cyan('--tool claude')}  Claude Code only
+  ${chalk.cyan('--tool codex')}   Codex CLI only
+  ${chalk.cyan('--tool all')}     Both tools (default, skips missing ones)
+
+${chalk.dim('Docs: https://www.npmjs.com/package/@kaustuv/skills')}
+`);
+  process.exit(0);
+}
 
 program.parse();

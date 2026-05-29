@@ -1,6 +1,6 @@
 # @kaustuv/skills
 
-Personal Claude Code and Codex skills installer. Install skills by name or group with a single `npx` command.
+Personal Claude Code and Codex skills installer. Install skills by name, group, or project with a single `npx` command.
 
 ## Install
 
@@ -12,44 +12,34 @@ npx @kaustuv/skills <command>
 
 ## Commands
 
-### List available skills
-
 ```bash
-npx @kaustuv/skills list
+npx @kaustuv/skills list                       # Show all projects, groups, and skills
+npx @kaustuv/skills install --project hostby   # Install all skills for a project
+npx @kaustuv/skills install --group pr-ops      # Install all skills in a group
+npx @kaustuv/skills install premrg-validate     # Install one skill
+npx @kaustuv/skills update                      # Check for a newer version
 ```
 
-### Install a skill by name
-
-```bash
-npx @kaustuv/skills install premrg-validate
-```
-
-### Install all skills in a group
-
-```bash
-npx @kaustuv/skills install --group personal
-```
-
-### Flags
+## Flags
 
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
 | `--project` | project name | — | Install all skills required by a project |
 | `--group` | group name | — | Install all skills in a group |
-| `--level` | `user`, `repo` | `user` | User-level (`~/.claude/skills/`) or repo-level (`.claude/skills/`) |
+| `--level` | `repo`, `user` | `repo` | `repo` installs into `.claude/skills/` in current directory. Use `--level user` to install globally into `~/.claude/skills/` |
 | `--tool` | `claude`, `codex`, `all` | `all` | Target tool. Skipped silently if not installed. |
 
 ### Examples
 
 ```bash
-# Install all skills for a project
+# Install all skills for a project (repo level, default)
 npx @kaustuv/skills install --project hostby
 
-# Install all skills in a group
+# Install all skills in a group (repo level, default)
 npx @kaustuv/skills install --group pr-ops
 
-# Install one skill at repo level
-npx @kaustuv/skills install premrg-validate --level repo
+# Install one skill at user level (global)
+npx @kaustuv/skills install premrg-validate --level user
 
 # Install for Codex only
 npx @kaustuv/skills install --group pm-ops --tool codex
@@ -93,8 +83,35 @@ npx @kaustuv/skills update
 |---------|--------|-------------|
 | `hostby` | pr-ops, pm-ops | Hostby project skills |
 
+## How users discover skills
+
+The npm page (`https://www.npmjs.com/package/@kaustuv/skills`) shows the full README — including all groups, skills, and descriptions. Running `npx @kaustuv/skills list` also lists everything locally.
+
+Each skill's `description` field in `registry.json` is what Claude Code reads to decide when to trigger the skill — so keep it specific and match the skill file's own description.
+
 ## Adding Skills
 
 1. Add a directory under `skills/<group>/<skill-name>/` with a `SKILL.md`
-2. Register it in `registry.json`
+2. Register it in `registry.json` (add to the group's `skills` array and add a `skills.<name>` entry)
 3. Bump the version in `package.json` and `npm publish`
+
+## Skill file format
+
+Each skill lives at `skills/<group>/<skill-name>/SKILL.md`:
+
+```yaml
+---
+name: skill-name
+description: When to trigger, what it does. Be specific — this is how Claude Code decides to use it.
+---
+
+# Skill Title
+
+## Purpose
+...
+
+## Steps
+...
+```
+
+Skills can belong to multiple groups by adding the skill name to each group's `skills` array in `registry.json`, pointing at the same `path`.
