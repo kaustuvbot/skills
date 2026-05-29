@@ -52,7 +52,7 @@ npx @kaustuv/skills install --group pr-ops
 npx @kaustuv/skills install premrg-validate --level repo
 
 # Install for Codex only
-npx @kaustuv/skills install --group pmops --tool codex
+npx @kaustuv/skills install --group pm-ops --tool codex
 
 # Check for updates
 npx @kaustuv/skills update
@@ -74,7 +74,7 @@ npx @kaustuv/skills update
 | `combine-prs` | Combine multiple PRs into one main PR with combined description |
 | `db-seed` | Analyze task plans and append database seed entries required for manual test cases |
 
-### pmops
+### pm-ops
 
 | Skill | Description |
 |-------|-------------|
@@ -91,7 +91,7 @@ npx @kaustuv/skills update
 
 | Project | Groups | Description |
 |---------|--------|-------------|
-| `hostby` | pr-ops, pmops | Hostby project skills |
+| `hostby` | pr-ops, pm-ops | Hostby project skills |
 
 ## Adding Skills
 

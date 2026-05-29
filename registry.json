@@ -3,7 +3,7 @@
   "projects": {
     "hostby": {
       "description": "Hostby project skills",
-      "groups": ["pr-ops", "pmops"]
+      "groups": ["pr-ops", "pm-ops"]
     }
   },
   "groups": {
@@ -15,7 +15,7 @@
       "description": "PR workflow and operations skills",
       "skills": ["premrg-validate", "combine-prs", "db-seed"]
     },
-    "pmops": {
+    "pm-ops": {
       "description": "Project management and task workflow operations",
       "skills": ["pmops-board-audit", "pmops-breakdown", "pmops-create-task", "pmops-handoff-task", "pmops-close-task", "pmops-start-task", "pmops-task-workflow", "pmops-release-task"]
     },
@@ -41,43 +41,43 @@
       "description": "Analyze task plans and append database seed entries required for manual test cases"
     },
     "pmops-board-audit": {
-      "groups": ["pmops"],
-      "path": "skills/pmops/pmops-board-audit",
+      "groups": ["pm-ops"],
+      "path": "skills/pm-ops/pmops-board-audit",
       "description": "Check task-board hygiene, ownership, branches, and dependency drift"
     },
     "pmops-breakdown": {
-      "groups": ["pmops"],
-      "path": "skills/pmops/pmops-breakdown",
+      "groups": ["pm-ops"],
+      "path": "skills/pm-ops/pmops-breakdown",
       "description": "Break a vague feature-spec task into 2-4 concrete implementation tasks"
     },
     "pmops-create-task": {
-      "groups": ["pmops"],
-      "path": "skills/pmops/pmops-create-task",
+      "groups": ["pm-ops"],
+      "path": "skills/pm-ops/pmops-create-task",
       "description": "Create a repo task row and task file under docs/ops"
     },
     "pmops-handoff-task": {
-      "groups": ["pmops"],
-      "path": "skills/pmops/pmops-handoff-task",
+      "groups": ["pm-ops"],
+      "path": "skills/pm-ops/pmops-handoff-task",
       "description": "Write a structured handoff for a paused or transferred tracked task"
     },
     "pmops-close-task": {
-      "groups": ["pmops"],
-      "path": "skills/pmops/pmops-close-task",
+      "groups": ["pm-ops"],
+      "path": "skills/pm-ops/pmops-close-task",
       "description": "Mark a tracked task as Done, Blocked, or Cancelled and update the board"
     },
     "pmops-start-task": {
-      "groups": ["pmops"],
-      "path": "skills/pmops/pmops-start-task",
+      "groups": ["pm-ops"],
+      "path": "skills/pm-ops/pmops-start-task",
       "description": "Claim a tracked task, create its branch, and load its task file"
     },
     "pmops-task-workflow": {
-      "groups": ["pmops"],
-      "path": "skills/pmops/pmops-task-workflow",
+      "groups": ["pm-ops"],
+      "path": "skills/pm-ops/pmops-task-workflow",
       "description": "Keep one active task, its board row, and its task file aligned during execution"
     },
     "pmops-release-task": {
-      "groups": ["pmops"],
-      "path": "skills/pmops/pmops-release-task",
+      "groups": ["pm-ops"],
+      "path": "skills/pm-ops/pmops-release-task",
       "description": "Move an active task to review and generate task-ID-first PR text"
     }
   }
